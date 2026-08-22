@@ -1,0 +1,102 @@
+# ===============================
+#  PYTHON (Backend)
+# ===============================
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Logs & Databases
+*.log
+*.sqlite
+*.sqlite3
+db.sqlite3
+
+# ===============================
+#  ENVIRONMENT VARIABLES (SECRETS)
+# ===============================
+.env
+.env.local
+.env.production
+.env.*.local
+
+# ===============================
+#  IDE / EDITOR CONFIGURATIONS
+# ===============================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+desktop.ini
+
+# ===============================
+#  REACT / NODE (Frontend - Future)
+# ===============================
+frontend/node_modules/
+frontend/.pnp/
+frontend/.pnp.js
+frontend/build/
+frontend/dist/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# ===============================
+#  UPLOADED FILES (Security)
+#  NEVER store user-uploaded legal PDFs in Git!
+# ===============================
+uploads/
+media/
+static/uploads/
+temp/
+chroma_data/
