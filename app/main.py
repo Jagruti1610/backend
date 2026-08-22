@@ -2,12 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .core.database import engine, Base
 from .api.v1.endpoints import auth, documents
+import os
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Legal Document Summarizer API", version="1.0")
 
-# ✅ CORRECT CORS CONFIGURATION
+# ✅ CORS Configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -28,3 +29,9 @@ app.include_router(documents.router, prefix="/api/v1")
 @app.get("/")
 def root():
     return {"message": "Legal Summarizer API is running perfectly!"}
+
+# ✅ For Render deployment
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port)
