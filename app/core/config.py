@@ -13,9 +13,10 @@ class Settings:
     # OCR Paths
     TESSERACT_PATH: str = os.getenv("TESSERACT_PATH", "")
     POPPLER_PATH: str = os.getenv("POPPLER_PATH", "")
-    # Email (Gmail SMTP) - used for the forgot-password flow
-    SMTP_EMAIL: str = os.getenv("SMTP_EMAIL", "")
-    SMTP_APP_PASSWORD: str = os.getenv("SMTP_APP_PASSWORD", "")
+    
+    # Email - SendGrid (Works on Render Free Tier)
+    SENDGRID_API_KEY: str = os.getenv("SENDGRID_API_KEY", "")
+    FROM_EMAIL: str = os.getenv("FROM_EMAIL", "")
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 settings = Settings()
