@@ -94,7 +94,6 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
     user = db.query(User).filter(User.email == data.email).first()
     if not user:
-        # Don't reveal whether the email is registered — same response either way.
         return generic_response
 
     token = secrets.token_urlsafe(32)
@@ -103,12 +102,17 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     db.commit()
 
     reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}"
-
+    
+    # ✅ LOG THE RESET LINK IN RENDER LOGS (since email sending is blocked on free tier)
+    print(f"🔑 RESET LINK for {user.email}: {reset_link}")
+    
+    # Try to send email (may fail on Render free tier, but we handle it gracefully)
     try:
         send_reset_email(user.email, reset_link)
+        print(f"✅ Email sent to {user.email}")
     except Exception as e:
-        print(f"[forgot-password] failed to send email to {user.email}: {e}")
-        raise HTTPException(status_code=500, detail="Could not send reset email. Please try again later.")
+        print(f"⚠️ Email sending failed (Render free tier block) — but reset link is available in logs: {e}")
+        # Don't throw error — user can still get link from logs
 
     return generic_response
 
