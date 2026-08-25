@@ -12,7 +12,6 @@ from ....schemas.user import (
     UserCreate, UserResponse, Token, UserLogin, UserUpdate, PasswordChange,
     ForgotPasswordRequest, ResetPasswordRequest,
 )
-from ....services.email import send_reset_email
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -85,7 +84,7 @@ async def change_password(
     db.commit()
     return {"message": "Password updated successfully"}
 
-
+# ✅ UPDATED: Forgot Password (No email sending)
 @router.post("/forgot-password")
 def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     generic_response = {
@@ -94,7 +93,6 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
     user = db.query(User).filter(User.email == data.email).first()
     if not user:
-        # Don't reveal whether the email is registered — same response either way.
         return generic_response
 
     token = secrets.token_urlsafe(32)
@@ -104,15 +102,12 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
     reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}"
 
-    try:
-        send_reset_email(user.email, reset_link)
-    except Exception as e:
-        print(f"[forgot-password] failed to send email to {user.email}: {e}")
-        raise HTTPException(status_code=500, detail="Could not send reset email. Please try again later.")
+    # ✅ Sirf log mein print — email send nahi kar rahe
+    print(f"🔑 RESET LINK for {user.email}: {reset_link}")
 
     return generic_response
 
-
+# ✅ Reset Password (Same)
 @router.post("/reset-password")
 def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.reset_token == data.token).first()
