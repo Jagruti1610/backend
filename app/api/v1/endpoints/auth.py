@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta, datetime, timezone
+import requests  # ✅ Google token verify ke liye
 
 from ....core.database import get_db
 from ....core.config import settings
@@ -16,6 +17,11 @@ from ....schemas.user import (
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 RESET_TOKEN_EXPIRY_MINUTES = 15
+
+# ✅ GOOGLE TOKEN SCHEMA
+from pydantic import BaseModel
+class GoogleTokenRequest(BaseModel):
+    token: str
 
 @router.post("/signup", response_model=UserResponse)
 def signup(user_data: UserCreate, db: Session = Depends(get_db)):
@@ -84,7 +90,52 @@ async def change_password(
     db.commit()
     return {"message": "Password updated successfully"}
 
-# ✅ UPDATED: Forgot Password (No email sending)
+
+# ✅ GOOGLE LOGIN ENDPOINT (ADD THIS)
+@router.post("/google")
+async def google_login(data: GoogleTokenRequest, db: Session = Depends(get_db)):
+    try:
+        # Verify Google token
+        resp = requests.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={data.token}")
+        user_info = resp.json()
+        
+        # Check if token is valid
+        if "error_description" in user_info:
+            raise HTTPException(status_code=401, detail="Invalid Google token")
+        
+        # Check client ID matches
+        if user_info.get("aud") != settings.GOOGLE_CLIENT_ID:
+            raise HTTPException(status_code=401, detail="Invalid Google client ID")
+        
+        email = user_info.get("email")
+        name = user_info.get("name")
+        
+        if not email:
+            raise HTTPException(status_code=400, detail="No email found in Google account")
+        
+        # Find or create user
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            user = User(
+                full_name=name or email.split('@')[0],
+                email=email,
+                hashed_password=""  # No password for Google users
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        
+        # Generate JWT token
+        access_token = create_access_token(data={"sub": user.email})
+        return {"access_token": access_token, "token_type": "bearer"}
+        
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=400, detail=f"Google auth failed: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Google auth failed: {str(e)}")
+
+
+# ✅ Forgot Password (No email sending)
 @router.post("/forgot-password")
 def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     generic_response = {
@@ -107,7 +158,8 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
     return generic_response
 
-# ✅ Reset Password (Same)
+
+# ✅ Reset Password
 @router.post("/reset-password")
 def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.reset_token == data.token).first()
