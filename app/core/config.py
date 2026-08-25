@@ -11,8 +11,8 @@ class Settings:
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
     
     # OCR Paths
-    POPPLER_PATH: str = os.getenv("POPPLER_PATH", "C:\\poppler\\Library\\bin")
-    TESSERACT_PATH: str = os.getenv("TESSERACT_PATH", "C:\\Program Files\\Tesseract-OCR\\tesseract.exe")
+    TESSERACT_PATH: str = os.getenv("TESSERACT_PATH", "")
+    POPPLER_PATH: str = os.getenv("POPPLER_PATH", "")  
 
     # Email (Gmail SMTP) - used for the forgot-password flow
     SMTP_EMAIL: str = os.getenv("SMTP_EMAIL", "")
