@@ -13,6 +13,7 @@ from ....schemas.user import (
     UserCreate, UserResponse, Token, UserLogin, UserUpdate, PasswordChange,
     ForgotPasswordRequest, ResetPasswordRequest,
 )
+from ....services.email import send_reset_email  # ✅ NAYA IMPORT
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -91,7 +92,7 @@ async def change_password(
     return {"message": "Password updated successfully"}
 
 
-# ✅ GOOGLE LOGIN ENDPOINT (ADD THIS)
+# ✅ GOOGLE LOGIN ENDPOINT
 @router.post("/google")
 async def google_login(data: GoogleTokenRequest, db: Session = Depends(get_db)):
     try:
@@ -135,7 +136,7 @@ async def google_login(data: GoogleTokenRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail=f"Google auth failed: {str(e)}")
 
 
-# ✅ Forgot Password (No email sending)
+# ✅ Forgot Password — ab real email bhejta hai
 @router.post("/forgot-password")
 def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     generic_response = {
@@ -153,8 +154,12 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
     reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}"
 
-    # ✅ Sirf log mein print — email send nahi kar rahe
-    print(f"🔑 RESET LINK for {user.email}: {reset_link}")
+    try:
+        send_reset_email(user.email, reset_link)
+    except Exception as e:
+        # Email fail hone par bhi user ko error mat batao (security ke liye),
+        # lekin server logs me dikh jayega debug karne ke liye
+        print(f"⚠️ Failed to send reset email to {user.email}: {e}")
 
     return generic_response
 
